@@ -182,9 +182,10 @@ document.getElementById("reportForm").addEventListener("submit",async(e)=>{
 
  const uploaded=[];
  try{
-  for(const file of files){
-   const safeName=file.name.replace(/[^\w.\-\u0600-\u06FF]/g,"_");
-   const path=`${Date.now()}_${Math.random().toString(36).slice(2)}_${safeName}`;
+  for(const file of files)
+   const extMatch = file.name.match(/\.([a-zA-Z0-9]{1,10})$/);
+const safeExt = extMatch ? extMatch[1].toLowerCase() : "bin";
+const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${safeExt}`;
    const {error:uploadError}=await db.storage.from(BUCKET).upload(path,file,{upsert:false});
    if(uploadError)throw new Error("فشل رفع الملف "+file.name+": "+uploadError.message);
    uploaded.push({name:file.name,path,type:file.type,size:file.size});
