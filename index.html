@@ -54,7 +54,9 @@ small{color:#69766e}
 <h2>الدخول إلى نموذج المتابعة</h2>
 <label for="gatePassword">كلمة المرور</label>
 <input id="gatePassword" type="password" placeholder="أدخل كلمة المرور">
-<div class="actions"><button onclick="enterForm()">دخول</button></div>
+ <div class="actions">
+<button type="button" onclick="window.enterForm()">دخول</button>
+</div>
 <p id="gateMessage"></p>
 </section>
 
@@ -135,18 +137,20 @@ ${["مرتفعة جداً","مرتفعة","متوسطة","ضعيفة"].map(v=>`
 `).join("")}
 </div>`).join("");
 
-function enterForm(){
- const pass=document.getElementById("gatePassword").value;
- if(pass==="54321"){
-  document.getElementById("gate").classList.add("hidden");
-  document.getElementById("reportForm").classList.remove("hidden");
-  window.scrollTo({top:0,behavior:"smooth"});
- }else{
-  document.getElementById("gateMessage").textContent="كلمة المرور غير صحيحة.";
-  document.getElementById("gateMessage").className="error";
- }
-}
 
+window.enterForm = function(){
+  const pass = document.getElementById("gatePassword").value.trim();
+
+  if(pass === "54321"){
+    document.getElementById("gate").classList.add("hidden");
+    document.getElementById("reportForm").classList.remove("hidden");
+    window.scrollTo({top:0, behavior:"smooth"});
+  } else {
+    const message = document.getElementById("gateMessage");
+    message.textContent = "كلمة المرور غير صحيحة.";
+    message.className = "error";
+  }
+};
 document.getElementById("evidence").addEventListener("change",()=>{
  const files=[...document.getElementById("evidence").files];
  const tooLarge=files.find(f=>f.size>12*1024*1024);
