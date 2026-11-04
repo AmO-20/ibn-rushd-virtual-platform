@@ -114,8 +114,7 @@ small{color:#69766e}
  const SUPABASE_KEY = "sb_publishable_vyTFz1z43ioVE5VTVJp33g_frdaWD-P";
 const TABLE = "virtual_platform_reports";
 const BUCKET = "virtual-platform-evidence";
-const db = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
+ let db = null;
 const criteria = [
 "جاهزية المنصة",
 "وضوح الصوت",
@@ -136,6 +135,13 @@ ${["مرتفعة جداً","مرتفعة","متوسطة","ضعيفة"].map(v=>`
 <label><input type="radio" name="rating${i}" value="${v}" required>${v}</label>
 `).join("")}
 </div>`).join("");
+ try {
+  if (window.supabase && window.supabase.createClient) {
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+} catch (error) {
+  console.error(error);
+}
 
 
 window.enterForm = function(){
