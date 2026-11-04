@@ -54,8 +54,8 @@ small{color:#69766e}
 <h2>الدخول إلى نموذج المتابعة</h2>
 <label for="gatePassword">كلمة المرور</label>
 <input id="gatePassword" type="password" placeholder="أدخل كلمة المرور">
- <div class="actions">
-<button type="button" onclick="window.enterForm()">دخول</button>
+ <div class="actions"> 
+  <button type="button" onclick="if(document.getElementById('gatePassword').value.trim()==='54321'){document.getElementById('gate').classList.add('hidden');document.getElementById('reportForm').classList.remove('hidden');window.scrollTo(0,0)}else{document.getElementById('gateMessage').textContent='كلمة المرور غير صحيحة.'}">دخول</button>
 </div>
 <p id="gateMessage"></p>
 </section>
