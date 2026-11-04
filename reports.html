@@ -31,7 +31,7 @@ td,th{padding:9px;border:1px solid #dce5de;text-align:right}
 th{background:#edf4ef}
 a{color:#176b45}
 footer{text-align:center;padding:20px;color:#68786e}
-@media print{.no-print,header button{display:none!important}body{background:white}.card,.report{box-shadow:none}}
+@media print{.no-print{display:none!important}body{background:white}.card,.report{box-shadow:none}}
 </style>
 </head>
 <body>
@@ -48,8 +48,10 @@ footer{text-align:center;padding:20px;color:#68786e}
 <input id="email" type="email" autocomplete="username" placeholder="البريد الإلكتروني">
 <label for="password">كلمة المرور</label>
 <input id="password" type="password" autocomplete="current-password" placeholder="كلمة المرور">
-<div class="actions"><button id="loginButton" onclick="login()">دخول</button>
-<a href="index.html" class="btn gold" style="text-decoration:none">العودة للرئيسية</a></div>
+<div class="actions">
+<button id="loginButton" onclick="login()">دخول</button>
+<a href="index.html" class="btn gold" style="text-decoration:none">العودة للرئيسية</a>
+</div>
 <p id="loginStatus"></p>
 </section>
 
@@ -75,10 +77,11 @@ footer{text-align:center;padding:20px;color:#68786e}
 <footer>مدارس ابن رشد — أرشيف المتابعة</footer>
 
 <script>
-const SUPABASE_URL="https://zqtgekdxnanuawbzxzlu.supabase.co";
-const SUPABASE_KEY="sb_publishable_qxDemcglTNNTXlMS8zQwDQ_qNxah-rK";
+const SUPABASE_URL="https://dsgjmwrlffklrwbylhng.supabase.co";
+const SUPABASE_KEY="sb_publishable_vyTFz1z43ioVE5VTVJp33g_frdaWD-P";
 const TABLE="virtual_platform_reports";
 const BUCKET="virtual-platform-evidence";
+
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let reports=[];
 
@@ -87,11 +90,25 @@ async function login(){
  const password=document.getElementById("password").value;
  const status=document.getElementById("loginStatus");
  const button=document.getElementById("loginButton");
- if(!email||!password){status.textContent="أدخل البريد الإلكتروني وكلمة المرور.";status.className="error";return;}
- button.disabled=true;status.textContent="جارٍ تسجيل الدخول...";
+
+ if(!email||!password){
+  status.textContent="أدخل البريد الإلكتروني وكلمة المرور.";
+  status.className="error";
+  return;
+ }
+
+ button.disabled=true;
+ status.textContent="جارٍ تسجيل الدخول...";
+
  const {error}=await db.auth.signInWithPassword({email,password});
  button.disabled=false;
- if(error){status.textContent="تعذر تسجيل الدخول: "+error.message;status.className="error";return;}
+
+ if(error){
+  status.textContent="تعذر تسجيل الدخول: "+error.message;
+  status.className="error";
+  return;
+ }
+
  await showArchive();
 }
 
@@ -113,11 +130,15 @@ async function logout(){
 async function loadReports(){
  const status=document.getElementById("archiveStatus");
  status.textContent="جارٍ تحميل التقارير...";
+
  const {data,error}=await db.from(TABLE).select("*").order("created_at",{ascending:false});
+
  if(error){
   status.textContent="تعذر تحميل التقارير: "+error.message;
-  status.className="error";return;
+  status.className="error";
+  return;
  }
+
  reports=data||[];
  status.textContent="عدد التقارير المحفوظة: "+reports.length;
  status.className="notice";
@@ -125,7 +146,9 @@ async function loadReports(){
 }
 
 function esc(value){
- return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ return String(value??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
 }
 
 function dateText(value){
@@ -136,13 +159,17 @@ function dateText(value){
 function renderReports(){
  const query=document.getElementById("search").value.trim().toLowerCase();
  const list=document.getElementById("reportsList");
+
  const filtered=reports.filter(r=>
   [r.follower,r.teacher,r.grade,r.subject,r.lesson,r.period]
   .some(v=>String(v||"").toLowerCase().includes(query))
  );
+
  if(!filtered.length){
-  list.innerHTML='<div class="card">لا توجد تقارير مطابقة لبحثك.</div>';return;
+  list.innerHTML='<div class="card">لا توجد تقارير مطابقة لبحثك.</div>';
+  return;
  }
+
  list.innerHTML=filtered.map(r=>`
  <article class="report">
  <h3>${esc(r.teacher||"تقرير متابعة")}</h3>
@@ -161,48 +188,81 @@ function renderReports(){
 async function showDetails(id){
  const r=reports.find(x=>String(x.id)===String(id));
  if(!r)return;
+
  const target=document.getElementById("details-"+id);
  if(!target)return;
- if(target.dataset.open==="yes"){target.innerHTML="";target.dataset.open="no";return;}
+
+ if(target.dataset.open==="yes"){
+  target.innerHTML="";
+  target.dataset.open="no";
+  return;
+ }
+
  target.dataset.open="yes";
 
  const ratings=r.ratings||{};
- let html='<div class="card"><h3>تفاصيل التقرير</h3><h4>التقييمات</h4><table><tr><th>المعيار</th><th>التقييم</th></tr>';
+ let html='<div class="card"><h3>تفاصيل التقرير</h3><h4>التقييمات</h4>';
+ html+='<table><tr><th>المعيار</th><th>التقييم</th></tr>';
+
  Object.entries(ratings).forEach(([k,v])=>{
   html+=`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`;
  });
+
  html+='</table>';
  html+=`<h4>الملاحظات</h4><p>${esc(r.notes||"لا توجد ملاحظات")}</p>`;
- html+='<h4>المرفقات</h4><div id="files-'+id+'">جارٍ تجهيز روابط الملفات...</div>';
- html+='<div class="actions no-print"><button class="gold" onclick="window.print()">طباعة هذا التقرير</button></div></div>';
+ html+='<h4>المرفقات</h4>';
+ html+=`<div id="files-${id}">جارٍ تجهيز روابط الملفات...</div>`;
+ html+='<div class="actions no-print"><button class="gold" onclick="window.print()">طباعة التقرير</button></div></div>';
+
  target.innerHTML=html;
 
  const files=Array.isArray(r.files)?r.files:[];
  const filesTarget=document.getElementById("files-"+id);
- if(!files.length){filesTarget.textContent="لا توجد مرفقات.";return;}
+
+ if(!files.length){
+  filesTarget.textContent="لا توجد مرفقات.";
+  return;
+ }
+
  let links=[];
+
  for(const f of files){
   const {data,error}=await db.storage.from(BUCKET).createSignedUrl(f.path,3600);
+
   if(!error&&data?.signedUrl){
    links.push(`<p><a href="${esc(data.signedUrl)}" target="_blank" rel="noopener">${esc(f.name||"فتح المرفق")}</a></p>`);
   }else{
-   links.push(`<p>${esc(f.name)} — تعذر إنشاء رابط الملف: ${esc(error?.message||"")}</p>`);
+   links.push(`<p>${esc(f.name)} — تعذر فتح الملف: ${esc(error?.message||"")}</p>`);
   }
  }
+
  filesTarget.innerHTML=links.join("");
 }
 
 async function deleteReport(id){
  if(!confirm("هل أنت متأكد من حذف هذا التقرير ومرفقاته؟"))return;
+
  const r=reports.find(x=>String(x.id)===String(id));
  if(!r)return;
- const paths=(Array.isArray(r.files)?r.files:[]).map(f=>f.path).filter(Boolean);
+
+ const paths=(Array.isArray(r.files)?r.files:[])
+  .map(f=>f.path).filter(Boolean);
+
  if(paths.length){
   const {error:storageError}=await db.storage.from(BUCKET).remove(paths);
-  if(storageError){alert("تعذر حذف المرفقات: "+storageError.message);return;}
+  if(storageError){
+   alert("تعذر حذف المرفقات: "+storageError.message);
+   return;
+  }
  }
+
  const {error}=await db.from(TABLE).delete().eq("id",id);
- if(error){alert("تعذر حذف التقرير: "+error.message);return;}
+
+ if(error){
+  alert("تعذر حذف التقرير: "+error.message);
+  return;
+ }
+
  alert("تم حذف التقرير.");
  await loadReports();
 }
@@ -211,6 +271,7 @@ async function start(){
  const {data}=await db.auth.getSession();
  if(data.session)await showArchive();
 }
+
 start();
 </script>
 </body>
