@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>أرشيف التقارير | مدارس ابن رشد</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f7f4;color:#24352c;font-family:Tahoma,Arial,sans-serif}
+header{background:linear-gradient(120deg,#105638,#218357);color:white;text-align:center;padding:22px}
+header img{width:95px;height:95px;object-fit:contain;background:white;border-radius:14px;padding:5px}
+h1{font-size:23px}
+main{max-width:1000px;margin:22px auto;padding:0 12px}
+.card{background:white;padding:20px;border-radius:14px;margin:15px 0;box-shadow:0 3px 14px #173c2812}
+h2{color:#176b45;font-size:20px}
+label{display:block;font-weight:bold;margin:12px 0 7px}
+input{width:100%;padding:12px;border:1px solid #cbd8cf;border-radius:9px;font:inherit}
+button,.btn{border:0;border-radius:8px;padding:11px 16px;font:inherit;font-weight:bold;cursor:pointer;background:#176b45;color:white}
+.gold{background:#c69b38;color:#18251d}
+.red{background:#a52e2e}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.report{border:1px solid #dce8df;border-radius:11px;padding:15px;margin:12px 0}
+.report h3{color:#176b45;margin-top:0}
+.muted{color:#68786e;font-size:13px}
+.hidden{display:none!important}
+.notice{padding:12px;border-radius:8px;background:#edf7ef;margin:10px 0}
+.error{color:#a22;background:#fff0ef;padding:10px;border-radius:8px}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+td,th{padding:9px;border:1px solid #dce5de;text-align:right}
+th{background:#edf4ef}
+a{color:#176b45}
+footer{text-align:center;padding:20px;color:#68786e}
+@media print{.no-print{display:none!important}body{background:white}.card,.report{box-shadow:none}}
+</style>
+</head>
+<body>
+<header>
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuLk5bR1ni6ys-QIgWOQWxMebvicBWO1rJGzfkJuIchNVIpRky3_LkD0o&s=10" alt="شعار مدارس ابن رشد">
+<h1>أرشيف تقارير متابعة المنصة الافتراضية</h1>
+<p>مدارس ابن رشد</p>
+</header>
+<main>
+<section class="card no-print" id="loginCard">
+<h2>تسجيل الدخول إلى الأرشيف</h2>
+<label for="email">البريد الإلكتروني</label>
+<input id="email" type="email" autocomplete="username" placeholder="البريد الإلكتروني">
+<label for="password">كلمة المرور</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="كلمة المرور">
+<div class="actions">
+<button id="loginButton" onclick="login()">دخول</button>
+<a href="index.html" class="btn gold" style="text-decoration:none">العودة للرئيسية</a>
+</div>
+<p id="loginStatus"></p>
+</section>
+<section id="archive" class="hidden">
+<div class="card no-print">
+<div class="actions" style="justify-content:space-between">
+<a href="index.html" class="btn gold" style="text-decoration:none">العودة للرئيسية</a>
+<button onclick="logout()">تسجيل الخروج</button>
+</div>
+<h2>التقارير المحفوظة</h2>
+<label for="search">البحث في التقارير</label>
+<input id="search" placeholder="ابحث باسم المعلم أو المتابع أو الصف أو التاريخ..." oninput="renderReports()">
+<div class="actions">
+<button onclick="loadReports()">تحديث الأرشيف</button>
+<button class="gold" onclick="window.print()">طباعة التقارير</button>
+</div>
+<p id="archiveStatus"></p>
+</div>
+<div id="reportsList"></div>
+</section>
+</main>
+<footer>مدارس ابن رشد — أرشيف المتابعة</footer>
+<script>
+const SUPABASE_URL="https://dsgjmwrlffklrwbylhng.supabase.co";
+const SUPABASE_KEY="sb_publishable_vyTFz1z43ioVE5VTVJp33g_frdaWD-P";
+const TABLE="virtual_platform_reports";
+const BUCKET="virtual-platform-evidence";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let reports=[];
+
+async function login(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ const status=document.getElementById("loginStatus");
+ const button=document.getElementById("loginButton");
+ if(!email||!password){
+  status.textContent="أدخل البريد الإلكتروني وكلمة المرور.";
+  status.className="error";return;
+ }
+ button.disabled=true;
+ status.textContent="جارٍ تسجيل الدخول...";
+ const {error}=await db.auth.signInWithPassword({email,password});
+ button.disabled=false;
+ if(error){
+  status.textContent="تعذر تسجيل الدخول: "+error.message;
+  status.className="error";return;
+ }
+ await showArchive();
+}
+async function showArchive(){
+ document.getElementById("loginCard").classList.add("hidden");
+ document.getElementById("archive").classList.remove("hidden");
+ await loadReports();
+}
+async function logout(){
+ await db.auth.signOut();
+ reports=[];
+ document.getElementById("archive").classList.add("hidden");
+ document.getElementById("loginCard").classList.remove("hidden");
+ document.getElementById("password").value="";
+ document.getElementById("loginStatus").textContent="تم تسجيل الخروج.";
+}
+async function loadReports(){
+ const status=document.getElementById("archiveStatus");
+ status.textContent="جارٍ تحميل التقارير...";
+ const {data,error}=await db.from(TABLE).select("*").order("created_at",{ascending:false});
+ if(error){
+  status.textContent="تعذر تحميل التقارير: "+error.message;
+  status.className="error";return;
+ }
+ reports=data||[];
+ status.textContent="عدد التقارير المحفوظة: "+reports.length;
+ status.className="notice";
+ renderReports();
+}
+function esc(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+function dateText(value){
+ if(!value)return "غير محدد";
+ const d=new Date(value);
+ return isNaN(d.getTime())?String(value):d.toLocaleString("ar-SA");
+}
+function visitDateText(value){
+ if(!value)return "غير مسجل";
+ const parts=String(value).slice(0,10).split("-");
+ if(parts.length!==3)return esc(value);
+ return esc(parts[2]+"/"+parts[1]+"/"+parts[0]);
+}
+function renderReports(){
+ const query=document.getElementById("search").value.trim().toLowerCase();
+ const list=document.getElementById("reportsList");
+ const filtered=reports.filter(r=>
+  [r.visit_date,r.follower,r.teacher,r.grade,r.subject,r.lesson,r.period]
+  .some(v=>String(v||"").toLowerCase().includes(query))
+ );
+ if(!filtered.length){
+  list.innerHTML='<div class="card">لا توجد تقارير مطابقة لبحثك.</div>';
+  return;
+ }
+ list.innerHTML=filtered.map(r=>`
+ <article class="report">
+ <h3>${esc(r.teacher||"تقرير متابعة")}</h3>
+ <p><b>المتابع:</b> ${esc(r.follower)}</p>
+ <p><b>الصف:</b> ${esc(r.grade)} — <b>الحصة:</b> ${esc(r.period)}</p>
+ <p><b>المادة:</b> ${esc(r.subject)} — <b>عنوان الدرس:</b> ${esc(r.lesson)}</p>
+ <p><b>تاريخ المتابعة:</b> ${visitDateText(r.visit_date)}</p>
+ <p class="muted">تاريخ الإرسال: ${esc(dateText(r.created_at))}</p>
+ <div class="actions no-print">
+ <button onclick="showDetails('${r.id}')">عرض التفاصيل</button>
+ <button class="red" onclick="deleteReport('${r.id}')">حذف التقرير</button>
+ </div>
+ <div id="details-${r.id}"></div>
+ </article>`).join("");
+}
+async function showDetails(id){
+ const r=reports.find(x=>String(x.id)===String(id));
+ if(!r)return;
+ const target=document.getElementById("details-"+id);
+ if(!target)return;
+ if(target.dataset.open==="yes"){
+  target.innerHTML="";target.dataset.open="no";return;
+ }
+ target.dataset.open="yes";
+ const ratings=r.ratings||{};
+ let html='<div class="card"><h3>تفاصيل التقرير</h3>';
+ html+=`<p><b>تاريخ المتابعة:</b> ${visitDateText(r.visit_date)}</p>`;
+ html+='<h4>التقييمات</h4><table><tr><th>المعيار</th><th>التقييم</th></tr>';
+ Object.entries(ratings).forEach(([k,v])=>{html+=`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`;});
+ html+='</table>';
+ html+=`<h4>الملاحظات</h4><p>${esc(r.notes||"لا توجد ملاحظات")}</p>`;
+ html+='<h4>المرفقات</h4><div id="files-'+id+'">جارٍ تجهيز روابط الملفات...</div>';
+ html+='<div class="actions no-print"><button class="gold" onclick="window.print()">طباعة التقرير</button></div></div>';
+ target.innerHTML=html;
+ const files=Array.isArray(r.files)?r.files:[];
+ const filesTarget=document.getElementById("files-"+id);
+ if(!files.length){filesTarget.textContent="لا توجد مرفقات.";return;}
+ let links=[];
+ for(const f of files){
+  const {data,error}=await db.storage.from(BUCKET).createSignedUrl(f.path,3600);
+  if(!error&&data?.signedUrl){
+   links.push(`<p><a href="${esc(data.signedUrl)}" target="_blank" rel="noopener">${esc(f.name||"فتح المرفق")}</a></p>`);
+  }else{
+   links.push(`<p>${esc(f.name)} — تعذر فتح الملف: ${esc(error?.message||"")}</p>`);
+  }
+ }
+ filesTarget.innerHTML=links.join("");
+}
+async function deleteReport(id){
+ if(!confirm("هل أنت متأكد من حذف هذا التقرير ومرفقاته؟"))return;
+ const r=reports.find(x=>String(x.id)===String(id));
+ if(!r)return;
+ const paths=(Array.isArray(r.files)?r.files:[]).map(f=>f.path).filter(Boolean);
+ if(paths.length){
+  const {error:storageError}=await db.storage.from(BUCKET).remove(paths);
+  if(storageError){alert("تعذر حذف المرفقات: "+storageError.message);return;}
+ }
+ const {error}=await db.from(TABLE).delete().eq("id",id);
+ if(error){alert("تعذر حذف التقرير: "+error.message);return;}
+ alert("تم حذف التقرير.");
+ await loadReports();
+}
+async function start(){
+ const {data}=await db.auth.getSession();
+ if(data.session)await showArchive();
+}
+start();
+</script>
+</body>
+</html>
