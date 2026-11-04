@@ -1,64 +1,217 @@
-<!doctype html>
-<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>أرشيف التقارير | مدارس ابن رشد</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--green:#176b50;--dark:#124b3b;--gold:#d7ad54;--bg:#f3f7f5;--ink:#20352d}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Tahoma,Arial,sans-serif;color:var(--ink);line-height:1.7}
-header{background:linear-gradient(120deg,var(--dark),#218263);color:white;padding:25px 15px;text-align:center}header h1{margin:5px}header p{margin:0;color:#e4f2eb}.logo{width:96px;height:96px;object-fit:contain;background:white;border-radius:18px;padding:7px;display:block;margin:0 auto 10px}.school-photo{display:block;width:min(100%,760px);max-height:250px;object-fit:cover;border-radius:18px;margin:14px auto 0;border:3px solid #ffffff55;box-shadow:0 8px 24px #092f2360}
-main{max-width:1100px;margin:24px auto;padding:0 14px}.card{background:white;border-radius:17px;padding:20px;margin:16px 0;box-shadow:0 5px 20px #163d2b12;border:1px solid #e3ece7}
-h2{color:var(--dark);margin:0 0 12px}.filters{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}input{width:100%;border:1px solid #cbd9d1;border-radius:10px;padding:11px;font:inherit}
-button,.btn{border:0;border-radius:10px;padding:10px 15px;font:inherit;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-block}.primary{background:var(--green);color:white}.secondary{background:#e8f1ec;color:var(--dark)}.danger{background:#fae9e7;color:#a33229}
-table{width:100%;border-collapse:collapse;min-width:720px}th,td{padding:12px;border-bottom:1px solid #e5ede8;text-align:right}th{background:#edf5f0;color:var(--dark)}.tablewrap{overflow:auto;border-radius:10px}.muted{color:#65786e;font-size:14px}.actions{display:flex;gap:8px;flex-wrap:wrap}
-#details{display:none}.detailgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.item{background:#f6faf7;padding:10px;border-radius:10px}.item b{color:var(--dark)}.rating{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #e7eee9;padding:7px 0}.evidence-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.evidence-image{display:block;width:100%;max-height:220px;object-fit:contain;background:#fff;border:1px solid #dce8e1;border-radius:10px;margin:10px 0}.evidence-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.evidence-image{display:block;width:100%;max-height:220px;object-fit:contain;background:#fff;border:1px solid #dce8e1;border-radius:10px;margin:10px 0}
-footer{text-align:center;color:#718078;padding:24px;font-size:13px}
-@media(max-width:700px){.filters{grid-template-columns:1fr 1fr}.detailgrid{grid-template-columns:1fr}.logo{width:84px;height:84px}.school-photo{max-height:190px}}
-@media print{header,.filters,.noprint,footer{display:none!important}body{background:white}.card{box-shadow:none;border:0}#details{display:block!important}}
+*{box-sizing:border-box}
+body{margin:0;background:#f3f7f4;color:#24352c;font-family:Tahoma,Arial,sans-serif}
+header{background:linear-gradient(120deg,#105638,#218357);color:white;text-align:center;padding:22px}
+header img{width:95px;height:95px;object-fit:contain;background:white;border-radius:14px;padding:5px}
+h1{font-size:23px}
+main{max-width:1000px;margin:22px auto;padding:0 12px}
+.card{background:white;padding:20px;border-radius:14px;margin:15px 0;box-shadow:0 3px 14px #173c2812}
+h2{color:#176b45;font-size:20px}
+label{display:block;font-weight:bold;margin:12px 0 7px}
+input{width:100%;padding:12px;border:1px solid #cbd8cf;border-radius:9px;font:inherit}
+button,.btn{border:0;border-radius:8px;padding:11px 16px;font:inherit;font-weight:bold;cursor:pointer;background:#176b45;color:white}
+.gold{background:#c69b38;color:#18251d}
+.red{background:#a52e2e}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.report{border:1px solid #dce8df;border-radius:11px;padding:15px;margin:12px 0}
+.report h3{color:#176b45;margin-top:0}
+.muted{color:#68786e;font-size:13px}
+.hidden{display:none!important}
+.notice{padding:12px;border-radius:8px;background:#edf7ef;margin:10px 0}
+.error{color:#a22;background:#fff0ef;padding:10px;border-radius:8px}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+td,th{padding:9px;border:1px solid #dce5de;text-align:right}
+th{background:#edf4ef}
+a{color:#176b45}
+footer{text-align:center;padding:20px;color:#68786e}
+@media print{.no-print,header button{display:none!important}body{background:white}.card,.report{box-shadow:none}}
 </style>
-<style id="ethics-design-theme">
-:root{--green:#397438;--dark:#245b36;--gold:#d7b66b;--bg:#f3f7fb;--ink:#1b2b3e}
-body{background:linear-gradient(145deg,#edf4eb 0%,#f6f5eb 48%,#eaf1e9 100%);color:#1b2b3e;font-family:Tahoma,Arial,sans-serif;line-height:1.8}
-header{background:linear-gradient(135deg,#245b36,#397438 58%,#6c9a58)!important;color:white;text-align:center;padding:18px 12px 24px!important;border-bottom:6px solid #d7b66b;box-shadow:0 5px 18px #193c2618}
-.school-brand{display:flex;justify-content:center;align-items:center;gap:14px;margin:0 auto 16px}.official-logo{width:76px;height:76px;object-fit:contain;background:#fff;border:3px solid #e6d49c;border-radius:18px;padding:5px;box-shadow:0 5px 16px #102b4b25}.brand-copy{text-align:right}.brand-ar{font-size:clamp(1.2rem,3vw,1.7rem);font-weight:800;line-height:1.3}.brand-en{font-size:.78rem;letter-spacing:1px;opacity:.9;direction:ltr}
-.school-photos{max-width:760px;margin:0 auto 17px;display:grid;grid-template-columns:1fr;gap:10px}.school-photos img{width:100%;height:clamp(115px,24vw,220px);object-fit:cover;border:3px solid #ffffffd9;border-radius:13px;box-shadow:0 5px 15px #102b4b35}
-header h1{max-width:960px;margin:0 auto;font-size:clamp(1.25rem,4vw,2.05rem);line-height:1.55}header p{margin:5px 0 0;color:#f5f7e9}
-main{max-width:1080px;margin:20px auto;padding:0 14px 45px}
-.card{background:linear-gradient(180deg,#fff 0%,#fcfdfb 100%);border:1px solid #dbe4ef;border-top:4px solid #c6d9b9;border-radius:16px;padding:20px;margin:16px 0;box-shadow:0 8px 25px #21452b0d}
-h2,h3{color:#285c2d}input,select,textarea{border:1px solid #b9c8d8;border-radius:9px;padding:11px;font:inherit}input:focus,select:focus,textarea:focus{outline:3px solid #d7e8c8;border-color:#397438}
-button,.btn,.linkbtn{border-radius:9px;padding:11px 17px;font:inherit;font-weight:bold}.primary{background:#397438!important;color:white!important}.secondary{background:#e9f1f9!important;color:#17365d!important}.danger{background:#fce9e9;color:#a52626}footer{text-align:center;color:#63768a;padding:24px;font-size:13px}
-@media(max-width:650px){.school-brand{gap:10px}.official-logo{width:68px;height:68px}.school-photos img{height:150px}.card{padding:17px}}
-</style>
-</head><body>
+</head>
+<body>
 <header>
-<div class="school-brand"><img class="official-logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuLk5bR1ni6ys-QIgWOQWxMebvicBWO1rJGzfkJuIchNVIpRky3_LkD0o&s=10" alt="شعار مدارس ابن رشد" onerror="this.onerror=null;this.src='https://ibnroshd.edu.sa/favicon.ico'"><div class="brand-copy"><div class="brand-ar">مدارس ابن رشد</div><div class="brand-en">IBN ROSHD SCHOOLS · JAZAN</div><div class="brand-en">متابعة تفعيل المنصة الافتراضية</div></div></div>
-<div class="school-photos"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKgiuJxwAraFcx1a1eYQMa5trb_B96hSKz0gPPzPc4Og&s=10" alt="مبنى مدارس ابن رشد" loading="eager"></div>
-<h1>متابعة تفعيل المنصة الافتراضية</h1><p>مدارس ابن رشد · جازان</p>
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuLk5bR1ni6ys-QIgWOQWxMebvicBWO1rJGzfkJuIchNVIpRky3_LkD0o&s=10" alt="شعار مدارس ابن رشد">
+<h1>أرشيف تقارير متابعة المنصة الافتراضية</h1>
+<p>مدارس ابن رشد</p>
 </header>
+
 <main>
-<section class="card noprint"><div class="actions" style="justify-content:space-between;align-items:center"><div><h2>التقارير المحفوظة</h2><div class="muted">ابحث باسم المعلم أو المتابع، أو صفِّ التقارير حسب الصف والتاريخ.</div></div><a class="btn secondary" href="index.html">العودة إلى نموذج المتابعة</a></div>
-<div class="filters" style="margin-top:15px"><input id="search" placeholder="بحث باسم المعلم أو المتابع"><input id="grade" placeholder="الصف"><input id="from" type="date" aria-label="من تاريخ"><input id="to" type="date" aria-label="إلى تاريخ"></div>
-<div class="actions" style="margin-top:12px"><button class="primary" id="filterBtn">تطبيق البحث</button><button class="secondary" id="clearBtn">مسح التصفية</button><button class="secondary" id="refreshBtn">تحديث</button></div></section>
-<section class="card"><div id="count" class="muted">جارٍ تحميل التقارير...</div><div class="tablewrap"><table><thead><tr><th>التاريخ والوقت</th><th>المتابع</th><th>المعلم</th><th>الصف</th><th>المادة</th><th>الإجراءات</th></tr></thead><tbody id="rows"></tbody></table></div></section>
-<section id="details" class="card"><div class="actions noprint" style="justify-content:space-between"><h2>تفاصيل التقرير</h2><div><button class="primary" onclick="window.print()">طباعة / حفظ PDF</button><button class="secondary" id="closeDetails">إغلاق</button></div></div><div id="detailContent"></div></section>
-</main><footer>مدارس ابن رشد · أرشيف المتابعة</footer>
+<section class="card no-print" id="loginCard">
+<h2>تسجيل الدخول إلى الأرشيف</h2>
+<label for="email">البريد الإلكتروني</label>
+<input id="email" type="email" autocomplete="username" placeholder="البريد الإلكتروني">
+<label for="password">كلمة المرور</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="كلمة المرور">
+<div class="actions"><button id="loginButton" onclick="login()">دخول</button>
+<a href="index.html" class="btn gold" style="text-decoration:none">العودة للرئيسية</a></div>
+<p id="loginStatus"></p>
+</section>
+
+<section id="archive" class="hidden">
+<div class="card no-print">
+<div class="actions" style="justify-content:space-between">
+<a href="index.html" class="btn gold" style="text-decoration:none">العودة للرئيسية</a>
+<button onclick="logout()">تسجيل الخروج</button>
+</div>
+<h2>التقارير المحفوظة</h2>
+<label for="search">البحث في التقارير</label>
+<input id="search" placeholder="ابحث باسم المعلم أو المتابع أو الصف..." oninput="renderReports()">
+<div class="actions">
+<button onclick="loadReports()">تحديث الأرشيف</button>
+<button class="gold" onclick="window.print()">طباعة التقارير</button>
+</div>
+<p id="archiveStatus"></p>
+</div>
+<div id="reportsList"></div>
+</section>
+</main>
+
+<footer>مدارس ابن رشد — أرشيف المتابعة</footer>
+
 <script>
-const DB='ibnRushdVirtualPlatformDB',STORE='reports';let all=[];
-function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:'id',autoIncrement:true})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
-async function getAll(){const db=await openDB();return new Promise((resolve,reject)=>{const r=db.transaction(STORE).objectStore(STORE).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
-async function remove(id){const db=await openDB();return new Promise((resolve,reject)=>{const r=db.transaction(STORE,'readwrite').objectStore(STORE).delete(Number(id));r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function dateText(s){return new Date(s).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'})}
-async function load(){try{all=await getAll();all.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));render()}catch(e){document.getElementById('count').textContent='تعذر تحميل الأرشيف: '+e.message}}
-function render(){const q=document.getElementById('search').value.trim().toLowerCase(),g=document.getElementById('grade').value.trim().toLowerCase(),from=document.getElementById('from').value,to=document.getElementById('to').value;
-const filtered=all.filter(r=>(!q||[r.teacher,r.follower].some(v=>String(v||'').toLowerCase().includes(q)))&&(!g||String(r.grade||'').toLowerCase().includes(g))&&(!from||r.createdAt.slice(0,10)>=from)&&(!to||r.createdAt.slice(0,10)<=to));
-document.getElementById('count').textContent=`عدد التقارير المعروضة: ${filtered.length} من ${all.length}`;
-const tbody=document.getElementById('rows');tbody.innerHTML='';if(!filtered.length){tbody.innerHTML='<tr><td colspan="6" class="muted">لا توجد تقارير مطابقة.</td></tr>';return}
-filtered.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(dateText(r.createdAt))}</td><td>${esc(r.follower)}</td><td>${esc(r.teacher)}</td><td>${esc(r.grade)}</td><td>${esc(r.subject)}</td><td><div class="actions"><button class="primary" data-view="${r.id}">عرض</button><button class="danger" data-delete="${r.id}">حذف</button></div></td>`;tbody.appendChild(tr)});
-tbody.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>showDetails(all.find(r=>r.id===Number(b.dataset.view))));tbody.querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{if(confirm('هل تريد حذف هذا التقرير نهائياً؟')){await remove(b.dataset.delete);document.getElementById('details').style.display='none';await load()}});
+const SUPABASE_URL="https://zqtgekdxnanuawbzxzlu.supabase.co";
+const SUPABASE_KEY="sb_publishable_qxDemcglTNNTXlMS8zQwDQ_qNxah-rK";
+const TABLE="virtual_platform_reports";
+const BUCKET="virtual-platform-evidence";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let reports=[];
+
+async function login(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ const status=document.getElementById("loginStatus");
+ const button=document.getElementById("loginButton");
+ if(!email||!password){status.textContent="أدخل البريد الإلكتروني وكلمة المرور.";status.className="error";return;}
+ button.disabled=true;status.textContent="جارٍ تسجيل الدخول...";
+ const {error}=await db.auth.signInWithPassword({email,password});
+ button.disabled=false;
+ if(error){status.textContent="تعذر تسجيل الدخول: "+error.message;status.className="error";return;}
+ await showArchive();
 }
-function showDetails(r){if(!r)return;const c=document.getElementById('detailContent');let html=`<div class="detailgrid">${[['التاريخ والوقت',dateText(r.createdAt)],['اسم المتابع',r.follower],['اسم المعلم',r.teacher],['الصف',r.grade],['الحصة',r.period],['المادة',r.subject],['عنوان الدرس',r.lesson]].map(([k,v])=>`<div class="item"><b>${esc(k)}:</b> ${esc(v)}</div>`).join('')}</div><h3>نتائج التقييم</h3>`;
-Object.entries(r.ratings||{}).forEach(([k,v])=>html+=`<div class="rating"><span>${esc(k)}</span><b>${esc(v)}</b></div>`);
-html+=`<h3>الملاحظات</h3><div class="item">${esc(r.notes||'لا توجد ملاحظات')}</div><h3>الشواهد المرفقة</h3>`;
-const files=r.files||[];if(!files.length)html+='<p class="muted">لا توجد مرفقات.</p>';else html+='<div class="evidence-grid">'+files.map((f,i)=>{const isImage=(f.type||'').startsWith('image/');return `<div class="item"><b>${esc(f.name)}</b><div class="muted">${Math.round(f.size/1024)} كيلوبايت</div>${isImage?`<img class="evidence-image" data-preview="${i}" alt="${esc(f.name)}">`:''}<button class="secondary" data-file="${i}">عرض / تنزيل المرفق</button></div>`}).join('')+'</div>';
-c.innerHTML=html;c.querySelectorAll('[data-preview]').forEach(img=>{img.src=URL.createObjectURL(files[Number(img.dataset.preview)])});c.querySelectorAll('[data-file]').forEach(b=>b.onclick=()=>{const f=files[Number(b.dataset.file)];const url=URL.createObjectURL(f);if((f.type||'').startsWith('image/'))window.open(url,'_blank');else{const a=document.createElement('a');a.href=url;a.download=f.name;a.click()}setTimeout(()=>URL.revokeObjectURL(url),30000)});document.getElementById('details').style.display='block';document.getElementById('details').scrollIntoView({behavior:'smooth'})}
-document.getElementById('filterBtn').onclick=render;document.getElementById('clearBtn').onclick=()=>{['search','grade','from','to'].forEach(id=>document.getElementById(id).value='');render()};document.getElementById('refreshBtn').onclick=load;document.getElementById('closeDetails').onclick=()=>document.getElementById('details').style.display='none';load();
-</script></body></html>
+
+async function showArchive(){
+ document.getElementById("loginCard").classList.add("hidden");
+ document.getElementById("archive").classList.remove("hidden");
+ await loadReports();
+}
+
+async function logout(){
+ await db.auth.signOut();
+ reports=[];
+ document.getElementById("archive").classList.add("hidden");
+ document.getElementById("loginCard").classList.remove("hidden");
+ document.getElementById("password").value="";
+ document.getElementById("loginStatus").textContent="تم تسجيل الخروج.";
+}
+
+async function loadReports(){
+ const status=document.getElementById("archiveStatus");
+ status.textContent="جارٍ تحميل التقارير...";
+ const {data,error}=await db.from(TABLE).select("*").order("created_at",{ascending:false});
+ if(error){
+  status.textContent="تعذر تحميل التقارير: "+error.message;
+  status.className="error";return;
+ }
+ reports=data||[];
+ status.textContent="عدد التقارير المحفوظة: "+reports.length;
+ status.className="notice";
+ renderReports();
+}
+
+function esc(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function dateText(value){
+ if(!value)return "غير محدد";
+ return new Date(value).toLocaleString("ar-SA");
+}
+
+function renderReports(){
+ const query=document.getElementById("search").value.trim().toLowerCase();
+ const list=document.getElementById("reportsList");
+ const filtered=reports.filter(r=>
+  [r.follower,r.teacher,r.grade,r.subject,r.lesson,r.period]
+  .some(v=>String(v||"").toLowerCase().includes(query))
+ );
+ if(!filtered.length){
+  list.innerHTML='<div class="card">لا توجد تقارير مطابقة لبحثك.</div>';return;
+ }
+ list.innerHTML=filtered.map(r=>`
+ <article class="report">
+ <h3>${esc(r.teacher||"تقرير متابعة")}</h3>
+ <p><b>المتابع:</b> ${esc(r.follower)}</p>
+ <p><b>الصف:</b> ${esc(r.grade)} — <b>الحصة:</b> ${esc(r.period)}</p>
+ <p><b>المادة:</b> ${esc(r.subject)} — <b>عنوان الدرس:</b> ${esc(r.lesson)}</p>
+ <p class="muted">تاريخ الإرسال: ${esc(dateText(r.created_at))}</p>
+ <div class="actions no-print">
+ <button onclick="showDetails('${r.id}')">عرض التفاصيل</button>
+ <button class="red" onclick="deleteReport('${r.id}')">حذف التقرير</button>
+ </div>
+ <div id="details-${r.id}"></div>
+ </article>`).join("");
+}
+
+async function showDetails(id){
+ const r=reports.find(x=>String(x.id)===String(id));
+ if(!r)return;
+ const target=document.getElementById("details-"+id);
+ if(!target)return;
+ if(target.dataset.open==="yes"){target.innerHTML="";target.dataset.open="no";return;}
+ target.dataset.open="yes";
+
+ const ratings=r.ratings||{};
+ let html='<div class="card"><h3>تفاصيل التقرير</h3><h4>التقييمات</h4><table><tr><th>المعيار</th><th>التقييم</th></tr>';
+ Object.entries(ratings).forEach(([k,v])=>{
+  html+=`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`;
+ });
+ html+='</table>';
+ html+=`<h4>الملاحظات</h4><p>${esc(r.notes||"لا توجد ملاحظات")}</p>`;
+ html+='<h4>المرفقات</h4><div id="files-'+id+'">جارٍ تجهيز روابط الملفات...</div>';
+ html+='<div class="actions no-print"><button class="gold" onclick="window.print()">طباعة هذا التقرير</button></div></div>';
+ target.innerHTML=html;
+
+ const files=Array.isArray(r.files)?r.files:[];
+ const filesTarget=document.getElementById("files-"+id);
+ if(!files.length){filesTarget.textContent="لا توجد مرفقات.";return;}
+ let links=[];
+ for(const f of files){
+  const {data,error}=await db.storage.from(BUCKET).createSignedUrl(f.path,3600);
+  if(!error&&data?.signedUrl){
+   links.push(`<p><a href="${esc(data.signedUrl)}" target="_blank" rel="noopener">${esc(f.name||"فتح المرفق")}</a></p>`);
+  }else{
+   links.push(`<p>${esc(f.name)} — تعذر إنشاء رابط الملف: ${esc(error?.message||"")}</p>`);
+  }
+ }
+ filesTarget.innerHTML=links.join("");
+}
+
+async function deleteReport(id){
+ if(!confirm("هل أنت متأكد من حذف هذا التقرير ومرفقاته؟"))return;
+ const r=reports.find(x=>String(x.id)===String(id));
+ if(!r)return;
+ const paths=(Array.isArray(r.files)?r.files:[]).map(f=>f.path).filter(Boolean);
+ if(paths.length){
+  const {error:storageError}=await db.storage.from(BUCKET).remove(paths);
+  if(storageError){alert("تعذر حذف المرفقات: "+storageError.message);return;}
+ }
+ const {error}=await db.from(TABLE).delete().eq("id",id);
+ if(error){alert("تعذر حذف التقرير: "+error.message);return;}
+ alert("تم حذف التقرير.");
+ await loadReports();
+}
+
+async function start(){
+ const {data}=await db.auth.getSession();
+ if(data.session)await showArchive();
+}
+start();
+</script>
+</body>
+</html>
